@@ -1,0 +1,33 @@
+{
+  "name": "tanktelemetry",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @tanktelemetry/sdk && concurrently -n intake,dashboard -c white,gray \"npm run dev -w @tanktelemetry/intake\" \"npm run dev -w @tanktelemetry/dashboard\"",
+    "dev:intake": "npm run dev -w @tanktelemetry/intake",
+    "dev:dashboard": "npm run dev -w @tanktelemetry/dashboard",
+    "dev:sdk": "npm run build -w @tanktelemetry/sdk -- --watch",
+    "build": "npm run build -w @tanktelemetry/sdk && npm run build -w @tanktelemetry/intake && npm run build -w @tanktelemetry/dashboard",
+    "build:intake": "npm run build -w @tanktelemetry/intake",
+    "build:dashboard": "npm run build -w @tanktelemetry/dashboard",
+    "start": "concurrently -n intake,dashboard -c white,gray \"npm run start -w @tanktelemetry/intake\" \"npm run start -w @tanktelemetry/dashboard\"",
+    "db:generate": "npm run db:generate -w @tanktelemetry/intake",
+    "db:migrate": "npm run db:migrate -w @tanktelemetry/intake",
+    "db:migrate:dev": "npm run db:migrate:dev -w @tanktelemetry/intake",
+    "db:push": "npm run db:push -w @tanktelemetry/intake",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:ps": "docker compose ps"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

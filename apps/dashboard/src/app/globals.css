@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-surface text-zinc-100;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-700/80 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-600;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/[0.04] bg-surface-raised shadow-card;
+  }
+
+  .card-header {
+    @apply flex items-center justify-between px-5 pt-5 pb-3;
+  }
+
+  .card-title {
+    @apply text-[15px] font-medium tracking-tight text-zinc-100;
+  }
+
+  .card-subtitle {
+    @apply text-xs text-zinc-500;
+  }
+}
+
+@layer utilities {
+  .status-ok {
+    @apply text-emerald-400;
+  }
+  .status-warn {
+    @apply text-amber-400;
+  }
+  .status-bad {
+    @apply text-red-400;
+  }
+}

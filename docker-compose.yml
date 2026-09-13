@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tanktelemetry-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-tanktelemetry}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-tanktelemetry}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - tanktelemetry
+
+  intake:
+    build:
+      context: .
+      dockerfile: apps/intake/Dockerfile
+    container_name: tanktelemetry-intake
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-tanktelemetry}?schema=public
+      PORT: 3001
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      INCIDENT_MONITOR_ENABLED: ${INCIDENT_MONITOR_ENABLED:-true}
+      ALERT_ERROR_RATE_THRESHOLD: ${ALERT_ERROR_RATE_THRESHOLD:-0.05}
+      ALERT_P95_LATENCY_MS: ${ALERT_P95_LATENCY_MS:-2000}
+      ALERT_WINDOW_MINUTES: ${ALERT_WINDOW_MINUTES:-5}
+      ALERT_MIN_SAMPLE_SIZE: ${ALERT_MIN_SAMPLE_SIZE:-20}
+      ALERT_COOLDOWN_MS: ${ALERT_COOLDOWN_MS:-300000}
+      ALERT_CRON: ${ALERT_CRON:-*/1 * * * *}
+      ALERTS_ENABLED: ${ALERTS_ENABLED:-true}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-alerts@tanktelemetry.local}
+      ALERT_EMAIL_TO: ${ALERT_EMAIL_TO:-}
+    ports:
+      - "${INTAKE_PORT:-3001}:3001"
+    networks:
+      - tanktelemetry
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+    container_name: tanktelemetry-dashboard
+    restart: unless-stopped
+    depends_on:
+      intake:
+        condition: service_healthy
+    environment:
+      INTAKE_URL: http://intake:3001
+      DEFAULT_APP_ID: ${DEFAULT_APP_ID:-demo-app}
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "${DASHBOARD_PORT:-3000}:3000"
+    networks:
+      - tanktelemetry
+
+volumes:
+  postgres_data:
+
+networks:
+  tanktelemetry:
+    driver: bridge

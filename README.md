@@ -1,4 +1,4 @@
-# TankTelemetry 📡
+# TankTelemetry
 
 > High-performance API analytics and real-time telemetry monitoring SaaS.
 
